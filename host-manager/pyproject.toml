@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "host-manager"
+version = "0.1.0"
+description = "Automates provisioning and lifecycle management of multi-tech websites on a single VPS using Docker + Traefik"
+authors = [
+  { name = "Host Manager", email = "admin@example.com" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "click>=8.1",
+  "paramiko>=3.4",
+  "fabric>=3.2",
+  "invoke>=2.2",
+  "pyyaml>=6.0",
+  "jinja2>=3.1",
+  "packaging>=24.0",
+  "rich>=13.7",
+]
+
+[project.scripts]
+host-manager = "host_manager.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["host_manager*", "templates*", "examples*"]
+
+[tool.black]
+line-length = 100
