@@ -54,17 +54,48 @@ Automate provisioning and lifecycle management of multi-technology customer webs
 
 ### Installation
 
-Install from source (editable):
+Choose one of the two modes below.
+
+1) Run directly ON the VPS (local mode):
 ```bash
-python -m venv .venv
+# Log in to the VPS, then install prerequisites
+sudo apt update
+sudo apt install -y python3 python3-venv python3-pip git
+# Optional: make `python` point to python3
+sudo apt install -y python-is-python3
+
+# Clone the repository (adjust directory as you like)
+cd /opt
+sudo git clone https://github.com/younes-salimnezhad/host-manager.git
+sudo chown -R "$USER":"$USER" host-manager
+cd host-manager/host-manager
+
+# Create and activate virtualenv
+python3 -m venv .venv
 source .venv/bin/activate
+
+# Install package in editable mode
 pip install -U pip
-pip install -e ./host-manager
+pip install -e .
+
+# Verify CLI
 host-manager --help
 ```
 
-Remote mode prerequisites (running from your workstation):
-- SSH key access recommended; user must have sudo on the target
+2) Run from your workstation against the VPS (remote mode):
+```bash
+# On your workstation with network access to the VPS
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e ./host-manager
+
+# First-time bootstrap on the remote server using SSH key
+host-manager --remote --host <IP_OR_NAME> --ssh-user <USER> install-platform
+```
+Notes:
+- If using password instead of key, omit `--ssh-key` and you’ll be securely prompted.
+- Ensure the remote user has sudo privileges.
 
 ### Usage
 
@@ -132,14 +163,33 @@ flowchart LR
 - Logs under `/var/log/host-manager/host-manager.log` with rotation
 
 ### Troubleshooting
-- Docker permission denied: add user to `docker` group and re-login
+- Command `python` not found:
+  ```bash
+  sudo apt update
+  sudo apt install -y python3 python3-venv python3-pip
+  sudo apt install -y python-is-python3 # optional
+  ```
+- `.venv/bin/activate: No such file or directory`:
+  - You are not in the correct directory or did not create the venv.
+  - Run inside `host-manager/host-manager`:
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+- `host-manager: command not found`:
+  - Ensure the venv is active and you ran `pip install -e .` in the same folder as `pyproject.toml`.
+- Docker permission denied:
+  ```bash
+  sudo usermod -aG docker $USER
+  # log out and log back in (or reboot) to apply group changes
+  ```
 - Traefik ACME issues: correct domain DNS; check `acme.json` perms (600)
 - Hetzner volume attach fails: ensure `hcloud` is installed and token is valid
 - UFW blocks web: verify 80/443 allows
 
 ### Development
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ./host-manager
 pytest -q
@@ -158,17 +208,48 @@ pytest -q
 
 ### نصب
 
-نصب از سورس (حالت قابل ویرایش):
+دو حالت نصب وجود دارد:
+
+1) اجرا روی خود سرور (local):
 ```bash
-python -m venv .venv
+# ورود به سرور و نصب پیش‌نیازها
+sudo apt update
+sudo apt install -y python3 python3-venv python3-pip git
+# اختیاری: اشاره دستور python به python3
+sudo apt install -y python-is-python3
+
+# کلون ریپازیتوری
+cd /opt
+sudo git clone https://github.com/younes-salimnezhad/host-manager.git
+sudo chown -R "$USER":"$USER" host-manager
+cd host-manager/host-manager
+
+# ساخت و فعال‌سازی محیط مجازی
+python3 -m venv .venv
 source .venv/bin/activate
+
+# نصب پکیج
 pip install -U pip
-pip install -e ./host-manager
+pip install -e .
+
+# تست ابزار
 host-manager --help
 ```
 
-در حالت ریموت (از سیستم مدیریت):
-- پیشنهاد می‌شود از کلید SSH استفاده کنید و کاربر روی سرور دسترسی sudo داشته باشد.
+2) اجرا از روی سیستم مدیریت (remote) روی سرور:
+```bash
+# روی سیستم مدیریت
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e ./host-manager
+
+# اجرای اولیه نصب روی سرور با SSH
+host-manager --remote --host <آی‌پی_یا_نام> --ssh-user <کاربر> install-platform
+```
+نکات:
+- در صورت استفاده از رمز به‌جای کلید، `--ssh-key` را نگذارید تا رمز امن پرسیده شود.
+- کاربر روی سرور باید دسترسی sudo داشته باشد.
 
 ### نحوه استفاده
 
@@ -236,14 +317,33 @@ flowchart LR
 - لاگ‌ها در مسیر `/var/log/host-manager/host-manager.log` با چرخش
 
 ### رفع اشکال
-- خطای مجوز Docker: کاربر را به گروه `docker` اضافه کنید و مجدد وارد شوید
-- مشکل صدور گواهی Traefik/ACME: DNS صحیح، دسترسی فایل `acme.json` (مجوز 600)
-- مشکل اتصال Volume در Hetzner: نصب بودن `hcloud` و اعتبار توکن را بررسی کنید
+- خطای `python` یا `pip` پیدا نشد:
+  ```bash
+  sudo apt update
+  sudo apt install -y python3 python3-venv python3-pip
+  sudo apt install -y python-is-python3  # اختیاری
+  ```
+- خطای `.venv/bin/activate: No such file or directory`:
+  - مسیر اشتباه است یا venv ساخته نشده است.
+  - داخل پوشه `host-manager/host-manager` اجرا کنید:
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+- خطای `host-manager: command not found`:
+  - مطمئن شوید venv فعال است و `pip install -e .` را در همان پوشه‌ی `pyproject.toml` اجرا کرده‌اید.
+- خطای مجوز Docker:
+  ```bash
+  sudo usermod -aG docker $USER
+  # برای اعمال گروه، یک‌بار خروج/ورود کنید یا سرور را ریبوت کنید
+  ```
+- مشکلات Traefik/ACME: تنظیم DNS دامنه و سطح دسترسی `acme.json` (مجوز 600)
+- مشکل اتصال Volume در Hetzner: نصب بودن `hcloud` و اعتبار توکن
 - بلاک بودن وب توسط UFW: اجازه پورت‌های 80/443 را بررسی کنید
 
 ### توسعه
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ./host-manager
 pytest -q
